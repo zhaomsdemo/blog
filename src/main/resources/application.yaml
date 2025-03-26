@@ -1,1 +1,12 @@
-spring.application.name=blog
+spring:
+  application:
+    name: blog
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+      - org.springframework.boot.autoconfigure.mail.MailSenderValidatorAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.mail.MailHealthContributorAutoConfiguration
+  data:
+    mongodb:
+      database: mini-blog
+      uri: mongodb://localhost/mini-blog
