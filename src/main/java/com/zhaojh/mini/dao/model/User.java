@@ -1,5 +1,6 @@
 package com.zhaojh.mini.dao.model;
 
+import com.zhaojh.mini.common.pojo.Role;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +27,7 @@ public class User {
     String passwordHash;
     String avatarUrl;
     String bio;
+    Role role;
 
     @CreatedBy
     String createdBy;
