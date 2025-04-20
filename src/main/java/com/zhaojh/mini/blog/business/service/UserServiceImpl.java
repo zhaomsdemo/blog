@@ -1,6 +1,7 @@
 package com.zhaojh.mini.blog.business.service;
 
 import com.zhaojh.mini.blog.common.dto.UserDto;
+import com.zhaojh.mini.blog.common.exception.DataNotFoundException;
 import com.zhaojh.mini.blog.common.mapper.UserMapper;
 import com.zhaojh.mini.blog.common.vo.UserVo;
 import com.zhaojh.mini.blog.dao.model.User;
@@ -22,6 +23,14 @@ public class UserServiceImpl implements UserService {
     public UserVo createUser(UserDto userDto) {
         User user = userMapper.toUser(userDto);
         user = userRepository.save(user);
+        return userMapper.toUserVo(user);
+    }
+
+    @Override
+    public UserVo updateUser(String id, UserDto userDto) {
+        User user = userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found : " + id));
+        userMapper.updateUser(userDto, user);
+        userRepository.save(user);
         return userMapper.toUserVo(user);
     }
 }

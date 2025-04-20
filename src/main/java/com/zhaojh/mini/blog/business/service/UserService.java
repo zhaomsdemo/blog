@@ -6,4 +6,5 @@ import com.zhaojh.mini.blog.common.vo.UserVo;
 public interface UserService {
 
     UserVo createUser(UserDto userDto);
+    UserVo updateUser(String id, UserDto userDto);
 }

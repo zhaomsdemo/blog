@@ -16,6 +16,7 @@ public class UserVo {
     String id;
     String userName;
     String email;
+    String passwordHash;
     String avatarUrl;
     String bio;
     Role role;
