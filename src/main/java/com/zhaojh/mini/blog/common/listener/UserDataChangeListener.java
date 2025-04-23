@@ -1,12 +1,12 @@
 package com.zhaojh.mini.blog.common.listener;
 
-import com.zhaojh.mini.blog.common.mapper.UserMapper;
 import com.zhaojh.mini.blog.common.vo.UserVo;
 import com.zhaojh.mini.blog.dao.model.AuditLog;
 import com.zhaojh.mini.blog.dao.model.AuditLogChanges;
 import com.zhaojh.mini.blog.dao.model.User;
 import com.zhaojh.mini.blog.dao.repository.AuditLogChangesRepository;
 import com.zhaojh.mini.blog.dao.repository.AuditLogRepository;
+import com.zhaojh.mini.blog.dao.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -28,85 +28,97 @@ public class UserDataChangeListener extends AbstractMongoEventListener<User> {
 
     private final AuditLogRepository auditLogRepository;
     private final AuditLogChangesRepository auditLogChangesRepository;
-    private final UserMapper userMapper;
+    private final UserRepository userRepository;
 
-    private final Map<String, UserVo> userCache= new HashMap<>();
+    private final Map<String, User> userCache= new HashMap<>();
+    private final ThreadLocal<Boolean> isNewCreated = new ThreadLocal<>();
 
     @Override
     public void onBeforeSave(BeforeSaveEvent<User> event) {
-        User previousUser = event.getSource();
-        userCache.put("previousUser", userMapper.toUserVo(previousUser));
+        User user = event.getSource();
+        if (isNull(user.getId())) {
+            isNewCreated.set(true);
+        } else {
+            isNewCreated.set(false);
+            String userId = user.getId();
+            User previousUserFromDb = userRepository.findById(userId).get();
+            userCache.put("previousUser", previousUserFromDb);
+        }
         super.onBeforeSave(event);
     }
 
     @Override
     public void onAfterSave(AfterSaveEvent<User> event) {
         User savedUser = event.getSource();
-        UserVo previousUserVo = userCache.get("previousUser");
         log.info("User {} saved with id {}", savedUser, savedUser.getId());
-
-        AuditLog auditLog = AuditLog.builder()
-                .modelId(savedUser.getId())
-                .modelName("USER")
-                .action(isNewCreated(previousUserVo) ? "CREATE" : "UPDATE")
-                .build();
-
-        auditLogRepository.save(auditLog);
-        if (isNewCreated(previousUserVo)) {
+        if (isNewCreated.get()) {
+            AuditLog auditLog = AuditLog.builder()
+                    .modelId(savedUser.getId())
+                    .modelName("USER")
+                    .action("CREATE")
+                    .build();
+            auditLogRepository.save(auditLog);
             generateInsertAuditLogChanges(auditLog, savedUser);
         } else {
-            generateUpdateAuditLogChanges(auditLog, previousUserVo, savedUser);
+            AuditLog auditLog = AuditLog.builder()
+                    .modelId(savedUser.getId())
+                    .modelName("USER")
+                    .action("UPDATE")
+                    .build();
+            auditLogRepository.save(auditLog);
+            User previousUserFromDb = userCache.get("previousUser");
+            generateUpdateAuditLogChanges(auditLog, previousUserFromDb, savedUser);
         }
         super.onAfterSave(event);
     }
 
-    private void generateUpdateAuditLogChanges(AuditLog auditLog,UserVo previousUserVo, User savedUser) {
+    private void generateUpdateAuditLogChanges(AuditLog auditLog,User previousUser, User savedUser) {
         List<AuditLogChanges> auditLogChanges = new ArrayList<>();
-        if (!previousUserVo.getUserName().equals(savedUser.getUserName())) {
+        if (!previousUser.getUserName().equals(savedUser.getUserName())) {
             auditLogChanges.add(AuditLogChanges.builder()
                     .auditLogId(auditLog.getId())
                     .fieldName("userName")
-                    .oldValue(previousUserVo.getUserName())
+                    .oldValue(previousUser.getUserName())
                     .newValue(savedUser.getUserName())
                     .build());
         }
-        if (!previousUserVo.getEmail().equals(savedUser.getEmail())) {
+        if (!previousUser.getEmail().equals(savedUser.getEmail())) {
             auditLogChanges.add(AuditLogChanges.builder()
                     .auditLogId(auditLog.getId())
                     .fieldName("email")
-                    .oldValue(previousUserVo.getEmail())
+                    .oldValue(previousUser.getEmail())
                     .newValue(savedUser.getEmail())
                     .build());
         }
-        if (!previousUserVo.getPasswordHash().equals(savedUser.getPasswordHash())) {
+        if (!previousUser.getPasswordHash().equals(savedUser.getPasswordHash())) {
             auditLogChanges.add(AuditLogChanges.builder()
                     .auditLogId(auditLog.getId())
                     .fieldName("passwordHash")
-                    .oldValue(previousUserVo.getPasswordHash())
+                    .oldValue(previousUser.getPasswordHash())
                     .newValue(savedUser.getPasswordHash())
                     .build());
         }
-        if (!previousUserVo.getAvatarUrl().equals(savedUser.getAvatarUrl())) {
+        if (!previousUser.getAvatarUrl().equals(savedUser.getAvatarUrl())) {
             auditLogChanges.add(AuditLogChanges.builder()
                     .auditLogId(auditLog.getId())
                     .fieldName("avatarUrl")
-                    .oldValue(previousUserVo.getAvatarUrl())
+                    .oldValue(previousUser.getAvatarUrl())
                     .newValue(savedUser.getAvatarUrl())
                     .build());
         }
-        if (!previousUserVo.getBio().equals(savedUser.getBio())) {
+        if (!previousUser.getBio().equals(savedUser.getBio())) {
             auditLogChanges.add(AuditLogChanges.builder()
                     .auditLogId(auditLog.getId())
                     .fieldName("bio")
-                    .oldValue(previousUserVo.getBio())
+                    .oldValue(previousUser.getBio())
                     .newValue(savedUser.getBio())
                     .build());
         }
-        if (!previousUserVo.getRole().equals(savedUser.getRole())) {
+        if (!previousUser.getRole().equals(savedUser.getRole())) {
             auditLogChanges.add(AuditLogChanges.builder()
                     .auditLogId(auditLog.getId())
                     .fieldName("role")
-                    .oldValue(previousUserVo.getRole().toString())
+                    .oldValue(previousUser.getRole().toString())
                     .newValue(savedUser.getRole().toString())
                     .build());
         }
