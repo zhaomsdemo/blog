@@ -3,7 +3,7 @@ package com.zhaojh.mini.blog.common.listener;
 import com.zhaojh.mini.blog.common.vo.UserVo;
 import com.zhaojh.mini.blog.dao.model.AuditLog;
 import com.zhaojh.mini.blog.dao.model.AuditLogChanges;
-import com.zhaojh.mini.blog.dao.model.User;
+import com.zhaojh.mini.blog.dao.model.BlogUser;
 import com.zhaojh.mini.blog.dao.repository.AuditLogChangesRepository;
 import com.zhaojh.mini.blog.dao.repository.AuditLogRepository;
 import com.zhaojh.mini.blog.dao.repository.BlogUserRepository;
@@ -24,32 +24,32 @@ import static java.util.Objects.isNull;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserDataChangeListener extends AbstractMongoEventListener<User> {
+public class UserDataChangeListener extends AbstractMongoEventListener<BlogUser> {
 
     private final AuditLogRepository auditLogRepository;
     private final AuditLogChangesRepository auditLogChangesRepository;
     private final BlogUserRepository blogUserRepository;
 
-    private final Map<String, User> userCache= new HashMap<>();
+    private final Map<String, BlogUser> userCache= new HashMap<>();
     private final ThreadLocal<Boolean> isNewCreated = new ThreadLocal<>();
 
     @Override
-    public void onBeforeSave(BeforeSaveEvent<User> event) {
-        User user = event.getSource();
+    public void onBeforeSave(BeforeSaveEvent<BlogUser> event) {
+        BlogUser user = event.getSource();
         if (isNull(user.getId())) {
             isNewCreated.set(true);
         } else {
             isNewCreated.set(false);
             String userId = user.getId();
-            User previousUserFromDb = blogUserRepository.findById(userId).get();
+            BlogUser previousUserFromDb = blogUserRepository.findById(userId).get();
             userCache.put("previousUser", previousUserFromDb);
         }
         super.onBeforeSave(event);
     }
 
     @Override
-    public void onAfterSave(AfterSaveEvent<User> event) {
-        User savedUser = event.getSource();
+    public void onAfterSave(AfterSaveEvent<BlogUser> event) {
+        BlogUser savedUser = event.getSource();
         log.info("User {} saved with id {}", savedUser, savedUser.getId());
         if (isNewCreated.get()) {
             AuditLog auditLog = AuditLog.builder()
@@ -66,13 +66,13 @@ public class UserDataChangeListener extends AbstractMongoEventListener<User> {
                     .action("UPDATE")
                     .build();
             auditLogRepository.save(auditLog);
-            User previousUserFromDb = userCache.get("previousUser");
+            BlogUser previousUserFromDb = userCache.get("previousUser");
             generateUpdateAuditLogChanges(auditLog, previousUserFromDb, savedUser);
         }
         super.onAfterSave(event);
     }
 
-    private void generateUpdateAuditLogChanges(AuditLog auditLog,User previousUser, User savedUser) {
+    private void generateUpdateAuditLogChanges(AuditLog auditLog,BlogUser previousUser, BlogUser savedUser) {
         List<AuditLogChanges> auditLogChanges = new ArrayList<>();
         if (!previousUser.getUserName().equals(savedUser.getUserName())) {
             auditLogChanges.add(AuditLogChanges.builder()
@@ -125,7 +125,7 @@ public class UserDataChangeListener extends AbstractMongoEventListener<User> {
         auditLogChangesRepository.saveAll(auditLogChanges);
     }
 
-    private void generateInsertAuditLogChanges(AuditLog auditLog, User savedUser) {
+    private void generateInsertAuditLogChanges(AuditLog auditLog, BlogUser savedUser) {
 
         List<AuditLogChanges> auditLogChanges = new ArrayList<>();
         auditLogChanges.add(AuditLogChanges.builder()

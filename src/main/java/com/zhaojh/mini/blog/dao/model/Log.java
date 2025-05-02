@@ -23,7 +23,7 @@ public class Log {
     @MongoId
     String id;
     @DBRef
-    User user;
+    BlogUser user;
     String action;
     String description;
 

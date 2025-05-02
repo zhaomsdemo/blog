@@ -25,7 +25,7 @@ public class Comment {
     @DBRef
     Post post;
     @DBRef
-    User user;
+    BlogUser user;
     @DBRef(lazy = true)
     Comment parentComment;
     String content;

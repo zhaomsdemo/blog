@@ -25,7 +25,7 @@ public class Like {
     @DBRef
     Post post;
     @DBRef
-    User user;
+    BlogUser user;
 
     @CreatedBy
     String createdBy;

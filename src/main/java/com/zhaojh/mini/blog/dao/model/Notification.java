@@ -24,7 +24,7 @@ public class Notification {
     @MongoId
     String id;
     @DBRef
-    User user;
+    BlogUser user;
     NotificationType type;
     String sourceId;
     boolean isRead;
