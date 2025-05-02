@@ -18,7 +18,7 @@ import java.time.Instant;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Document(collection = "blog_user")
-public class User {
+public class BlogUser {
 
     @MongoId
     String id;

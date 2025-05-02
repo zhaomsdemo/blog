@@ -5,7 +5,7 @@ import com.zhaojh.mini.blog.common.exception.DataNotFoundException;
 import com.zhaojh.mini.blog.common.mapper.UserMapper;
 import com.zhaojh.mini.blog.common.vo.UserVo;
 import com.zhaojh.mini.blog.dao.model.User;
-import com.zhaojh.mini.blog.dao.repository.UserRepository;
+import com.zhaojh.mini.blog.dao.repository.BlogUserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,21 +16,21 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    UserRepository userRepository;
+    BlogUserRepository blogUserRepository;
     UserMapper userMapper;
 
     @Override
     public UserVo createUser(UserDto userDto) {
         User user = userMapper.toUser(userDto);
-        user = userRepository.save(user);
+        user = blogUserRepository.save(user);
         return userMapper.toUserVo(user);
     }
 
     @Override
     public UserVo updateUser(String id, UserDto userDto) {
-        User user = userRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found : " + id));
+        User user = blogUserRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found : " + id));
         userMapper.updateUser(userDto, user);
-        userRepository.save(user);
+        blogUserRepository.save(user);
         return userMapper.toUserVo(user);
     }
 }

@@ -6,7 +6,7 @@ import com.zhaojh.mini.blog.dao.model.AuditLogChanges;
 import com.zhaojh.mini.blog.dao.model.User;
 import com.zhaojh.mini.blog.dao.repository.AuditLogChangesRepository;
 import com.zhaojh.mini.blog.dao.repository.AuditLogRepository;
-import com.zhaojh.mini.blog.dao.repository.UserRepository;
+import com.zhaojh.mini.blog.dao.repository.BlogUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
@@ -28,7 +28,7 @@ public class UserDataChangeListener extends AbstractMongoEventListener<User> {
 
     private final AuditLogRepository auditLogRepository;
     private final AuditLogChangesRepository auditLogChangesRepository;
-    private final UserRepository userRepository;
+    private final BlogUserRepository blogUserRepository;
 
     private final Map<String, User> userCache= new HashMap<>();
     private final ThreadLocal<Boolean> isNewCreated = new ThreadLocal<>();
@@ -41,7 +41,7 @@ public class UserDataChangeListener extends AbstractMongoEventListener<User> {
         } else {
             isNewCreated.set(false);
             String userId = user.getId();
-            User previousUserFromDb = userRepository.findById(userId).get();
+            User previousUserFromDb = blogUserRepository.findById(userId).get();
             userCache.put("previousUser", previousUserFromDb);
         }
         super.onBeforeSave(event);
