@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -32,5 +35,12 @@ public class UserServiceImpl implements UserService {
         userMapper.updateUser(userDto, user);
         blogUserRepository.save(user);
         return userMapper.toUserVo(user);
+    }
+
+    @Override
+    public List<UserVo> findUsersByName(String name) {
+        return blogUserRepository.findByUserNameContaining(name).stream()
+                .map(userMapper::toUserVo)
+                .collect(Collectors.toList());
     }
 }

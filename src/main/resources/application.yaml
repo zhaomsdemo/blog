@@ -5,3 +5,6 @@ spring:
     mongodb:
       database: mini-blog
       uri: mongodb://localhost/mini-blog
+  mvc:
+    servlet:
+      path: /api
