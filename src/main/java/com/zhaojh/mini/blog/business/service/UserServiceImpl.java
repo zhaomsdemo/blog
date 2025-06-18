@@ -9,6 +9,8 @@ import com.zhaojh.mini.blog.dao.repository.BlogUserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +25,7 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     public UserVo createUser(UserDto userDto) {
         BlogUser user = userMapper.toUser(userDto);
         user = blogUserRepository.save(user);
@@ -30,6 +33,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(value = "users", allEntries = true)
     public UserVo updateUser(String id, UserDto userDto) {
         BlogUser user = blogUserRepository.findById(id).orElseThrow(() -> new DataNotFoundException("User not found : " + id));
         userMapper.updateUser(userDto, user);
@@ -37,7 +41,9 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserVo(user);
     }
 
+
     @Override
+    @Cacheable(value = "users", key = "#name")
     public List<UserVo> findUsersByName(String name) {
         return blogUserRepository.findByUserNameContaining(name).stream()
                 .map(userMapper::toUserVo)
