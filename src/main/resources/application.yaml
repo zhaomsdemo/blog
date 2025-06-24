@@ -5,6 +5,16 @@ spring:
     mongodb:
       database: mini-blog
       uri: mongodb://localhost/mini-blog
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000
+      database: 0
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000
+      cache-null-values: false
   mvc:
     servlet:
       path: /api
